@@ -22,6 +22,7 @@ INNER JOIN specs
 USING (movie_id)
 INNER JOIN distributors
 ON domestic_distributor_id = distributor_id
+	WHERE mpaa_rating = 'G'
 ORDER BY gross DESC;
 -- Toy Story 4, Walt Disney
 
@@ -31,7 +32,8 @@ SELECT distributors.company_name AS company, COUNT(specs.film_title) AS total_fi
 FROM distributors
 LEFT JOIN specs
 ON distributor_id = domestic_distributor_id
-GROUP BY company;
+GROUP BY company
+	ORDER BY total_films DESC;
 
 -- 5. Write a query that returns the five distributors with the highest average movie budget.
 SELECT distributors.company_name AS company, AVG(revenue.film_budget) AS budget
@@ -46,5 +48,43 @@ ON domestic_distributor_id = distributor_id
 --Walt Disney, Sony Pictures, Lionsgate, DreamWorks, Warner Bros.
 
 -- 6. How many movies in the dataset are distributed by a company which is not headquartered in California? Which of these movies has the highest imdb rating?
+SELECT specs.film_title, distributors.company_name AS company, distributors.headquarters AS location
+FROM distributors
+LEFT JOIN specs
+ON domestic_distributor_id = distributor_id
+	WHERE distributors.headquarters NOT LIKE '%CA'
+GROUP BY location, company;
+
+--Two movies.
+
+SELECT specs.film_title AS movie, distributors.company_name AS company, distributors.headquarters AS location, rating.imdb_rating AS rating
+FROM distributors
+LEFT JOIN specs
+ON domestic_distributor_id = distributor_id
+	INNER JOIN rating
+	USING (movie_id)
+	WHERE distributors.headquarters NOT LIKE '%CA%';
+-- My Big Fat Greek Wedding
 
 -- 7. Which have a higher average rating, movies which are over two hours long or movies which are under two hours?
+SELECT (specs.length_in_min/ 60) AS length, AVG(rating.imdb_rating) AS average_rating
+FROM specs
+LEFT JOIN rating
+USING (movie_id)
+GROUP BY length
+ORDER BY length DESC;
+
+--OR Jennifer's Union Idea:
+SELECT 'movies over 2 hours' AS movie_length, AVG(rating.imdb_rating) AS avg_rating
+FROM rating 
+JOIN specs 
+USING(movie_id)
+WHERE specs.length_in_min >= 120
+
+UNION 
+
+SELECT 'movies under 2 hours' AS movie_length, AVG(rating.imdb_rating) AS avg_rating
+FROM rating 
+JOIN specs 
+USING(movie_id)
+WHERE specs.length_in_min < 120;
